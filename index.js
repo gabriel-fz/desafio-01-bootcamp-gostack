@@ -28,8 +28,20 @@ function checkProjectExists(req, res, next) {
   return next();
 }
 
+// Middleware local que impede ids duplicados
+function checkIDExists(req, res, next) {
+  const { id } = req.body;
+  const project = projects.find(pjt => pjt.id == id);
+
+  if (project) {
+    return res.status(400).json({ error: "This ID already exists" });
+  }
+
+  return next();
+}
+
 // Cadastra um novo projeto
-server.post("/projects", (req, res) => {
+server.post("/projects", checkIDExists, (req, res) => {
   const { id, title } = req.body;
 
   const project = {
