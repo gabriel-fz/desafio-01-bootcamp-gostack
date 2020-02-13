@@ -5,6 +5,28 @@ const server = express();
 server.use(express.json());
 
 const projects = [];
+let contRequests = 0;
+
+// Middleware global que conta a quantidade de requisições
+server.use((req, res, next) => {
+  contRequests++;
+
+  console.log(`Quantidade de requisições feitas: ${contRequests}`);
+
+  return next();
+});
+
+// Middleware local que verifica se o id do projeto existe
+function checkProjectExists(req, res, next) {
+  const { id } = req.params;
+  const project = projects.find(pjt => pjt.id == id);
+
+  if (!project) {
+    return res.status(400).json({ error: "Project not found" });
+  }
+
+  return next();
+}
 
 // Cadastra um novo projeto
 server.post("/projects", (req, res) => {
@@ -27,7 +49,7 @@ server.get("/projects", (req, res) => {
 });
 
 // Edita o títilo do projeto
-server.put("/projects/:id", (req, res) => {
+server.put("/projects/:id", checkProjectExists, (req, res) => {
   const { id } = req.params;
   const { title } = req.body;
 
@@ -39,7 +61,7 @@ server.put("/projects/:id", (req, res) => {
 });
 
 // Deleta o projeto
-server.delete("/projects/:id", (req, res) => {
+server.delete("/projects/:id", checkProjectExists, (req, res) => {
   const { id } = req.params;
 
   const index = projects.findIndex(pjt => pjt.id == id);
@@ -50,7 +72,7 @@ server.delete("/projects/:id", (req, res) => {
 });
 
 // Armazena tarefas
-server.post("/projects/:id/tasks", (req, res) => {
+server.post("/projects/:id/tasks", checkProjectExists, (req, res) => {
   const { id } = req.params;
   const { title } = req.body;
 
